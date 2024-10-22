@@ -1,22 +1,12 @@
 package game;
 
+import util.ConsoleReader;
 import util.DisplayWord;
 import util.HangmanDictionary;
 
-
-/**
- * This class represents the traditional word-guessing game Hangman
- * where the computer guesses letters based on a predictable pattern.
- *
- * @author Robert C. Duvall
- */
-public class HangmanGameAutoGuesser extends HangmanGame {
-    private static final String LETTERS_ORDERED_BY_FREQUENCY = "etaoinshrldcumfpgwybvkxjqz";
-    private int myIndex;
-
-    public HangmanGameAutoGuesser(HangmanDictionary dictionary, int wordLength, int numGuesses) {
+public class HangmanGameInteractiveGuesser extends HangmanGame {
+    public HangmanGameInteractiveGuesser(HangmanDictionary dictionary, int wordLength, int numGuesses) {
         super(dictionary, wordLength, numGuesses);
-        myIndex = 0;
     }
 
     @Override
@@ -27,7 +17,8 @@ public class HangmanGameAutoGuesser extends HangmanGame {
 
     @Override
     protected char makeGuess() {
-        return LETTERS_ORDERED_BY_FREQUENCY.charAt(myIndex++);
+        String guess = ConsoleReader.promptString("Make a guess: ");
+        return guess.toLowerCase().charAt(0);
     }
 
     @Override
