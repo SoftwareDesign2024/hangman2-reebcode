@@ -1,51 +1,41 @@
+/*
+ * Reed Gatfield
+ * 
+ */
 package game;
 
-import util.ConsoleReader;
-import util.DisplayWord;
 import util.HangmanDictionary;
+import util.DisplayWord;
 
+public abstract class HangmanGame {
+    protected static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz";
+    protected String mySecretWord;
+    protected DisplayWord myDisplayWord;
+    protected StringBuilder myLettersLeftToGuess;
+    protected int myNumGuessesLeft;
 
-/**
- * This class represents the traditional word-guessing game Hangman
- * that plays interactively with the user.
- *
- * @author Robert C. Duvall
- */
-public class HangmanGame {
-    private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz";
-
-    // word that is being guessed
-    private String mySecretWord;
-    // how many guesses are remaining
-    private int myNumGuessesLeft;
-    // what is shown to the user
-    private DisplayWord myDisplayWord;
-    // tracks letters guessed
-    private StringBuilder myLettersLeftToGuess;
-
-
-    /**
-     * Create Hangman game with the given dictionary of words to play a game with words 
-     * of the given length and giving the user the given number of chances.
-     */
-    public HangmanGame (HangmanDictionary dictionary, int wordLength, int numGuesses) {
-        mySecretWord = getSecretWord(dictionary, wordLength);
-        myNumGuessesLeft = numGuesses;
+    public HangmanGame(HangmanDictionary dictionary, int wordLength, int numGuesses) {
         myLettersLeftToGuess = new StringBuilder(ALPHABET);
-        myDisplayWord = new DisplayWord(mySecretWord);
+        makeSecretWord(dictionary, wordLength);
+        myNumGuessesLeft = numGuesses;
     }
 
-    /**
-     * Play one complete game.
-     */
-    public void play () {
+    protected abstract void makeSecretWord(HangmanDictionary dictionary, int wordLength);
+    protected abstract char makeGuess();
+    protected abstract boolean checkGuessInSecret(char guess);
+
+    public void play() {
         boolean gameOver = false;
         while (!gameOver) {
             printStatus();
-
-            String guess = ConsoleReader.promptString("Make a guess: ");
-            if (guess.length() == 1 && Character.isAlphabetic(guess.charAt(0))) {
-                makeGuess(guess.toLowerCase().charAt(0));
+            
+            char guess = makeGuess();
+            if (isNewGuess(guess)) {
+                recordGuess(guess);
+                if (!checkGuessInSecret(guess)) {
+                    myNumGuessesLeft -= 1;
+                }
+                
                 if (isGameLost()) {
                     System.out.println("YOU ARE HUNG!!!");
                     gameOver = true;
@@ -55,62 +45,35 @@ public class HangmanGame {
                     gameOver = true;
                 }
             }
-            else {
-                System.out.println("Please enter a single letter ...");
-            }
         }
         System.out.println("The secret word was " + mySecretWord);
     }
 
+    protected boolean isNewGuess(char guess) {
+        return myLettersLeftToGuess.indexOf("" + guess) >= 0;
+    }
 
-    // Process a guess by updating the necessary internal state.
-    private void makeGuess (char guess) {
-        // do not count repeated guess as a miss
+    protected void recordGuess(char guess) {
         int index = myLettersLeftToGuess.indexOf("" + guess);
         if (index >= 0) {
-            recordGuess(index);
-            if (! checkGuessInSecret(guess)) {
-                myNumGuessesLeft -= 1;
-            }
+            myLettersLeftToGuess.deleteCharAt(index);
         }
     }
 
-    // Record that a specific letter was guessed
-    private void recordGuess (int index) {
-        myLettersLeftToGuess.deleteCharAt(index);
-    }
-
-    // Returns true only if given guess is in the secret word.
-    private boolean checkGuessInSecret (char guess) {
-        if (mySecretWord.indexOf(guess) >= 0) {
-            myDisplayWord.update(guess, mySecretWord);
-            return true;
-        }
-        return false;
-    }
-
-    // Returns a secret word.
-    private String getSecretWord (HangmanDictionary dictionary, int wordLength) {
-        return dictionary.getRandomWord(wordLength).toLowerCase();
-    }
-
-    // Returns true only if the guesser has guessed all letters in the secret word.
-    private boolean isGameWon () {
+    protected boolean isGameWon() {
         return myDisplayWord.equals(mySecretWord);
     }
 
-    // Returns true only if the guesser has used up all their chances to guess.
-    private boolean isGameLost () {
+    protected boolean isGameLost() {
         return myNumGuessesLeft == 0;
     }
 
-    // Print game stats
-    private void printStatus () {
+    protected void printStatus() {
         System.out.println(myDisplayWord);
         System.out.println("# misses left = " + myNumGuessesLeft);
         System.out.println("letters not yet guessed = " + myLettersLeftToGuess);
-        // NOT PUBLIC, but makes it easier to test
-        System.out.println("*** " + mySecretWord);
         System.out.println();
     }
 }
+
+    
